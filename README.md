@@ -1,10 +1,8 @@
-# django-db-cascade-2
+# django-db-cascade-3
 
-### Installation for Django 3
-`pip install django-db-cascade-2`
+### Installation for Django 3+
+`pip install django-db-cascade-3`
 
-### Installation for Django 2
-`pip install django-db-cascade-2==0.2.2`
 
 settings.py:
 ```
@@ -20,22 +18,26 @@ DATABASES = {
 ```
 from django.db import models
 from django_db_cascade.fields import ForeignKey, OneToOneField
-from django_db_cascade.deletions import DB_CASCADE
+from django_db_cascade.deletions import DB_CASCADE, DB_SET_NULL
 
 class Thing(Common):
     account = ForeignKey('self', DB_CASCADE)
+    
+class Parent(Common):
+    child = ForeignKey('Child', DB_SET_NULL, null=True, default=None)    
 ```
 
 ### Caveats
-- DB_CASCADE only supports Postgres
-- DB_CASCADE does not support django on_delete signals
-- DB_CASCADE will not cascade delete multiple inherited tables as expected
-- DB_CASCADE will not trigger CASCADE on another model. E.g. Model A points to model B, via DB_CASCADE. Model B points to model C, via CASCADE. A will cascade delete B, B will django delete C, but __deleting A will not delete C__!
-- DB_CASCADE on a ManyToMany of A <---> B, only A_B set records will be cascade deleted (deleting A will not delete B)
+
+- DB_SET_NULL/DB_CASCADE only supports Postgres
+- DB_SET_NULL/DB_CASCADE does not support django on_delete signals
+- DB_SET_NULL/DB_CASCADE will not cascade delete multiple inherited tables as expected
+- DB_SET_NULL/DB_CASCADE will not trigger CASCADE on another model. E.g. Model A points to model B, via DB_CASCADE. Model B points to model C, via CASCADE. A will cascade delete B, B will django delete C, but __deleting A will not delete C__!
+- DB_SET_NULL/DB_CASCADE on a ManyToMany of A <---> B, only A_B set records will be cascade deleted (deleting A will not delete B)
 
 ### How it works
 1. Minimal subclassing of the django postgresql backend and the django ForeignKey field
-3. Added a new possible value for ForeignKey's on_delete kwarg, called DB_CASCADE
+3. Added a new possible value for ForeignKey's on_delete kwarg, called DB_SET_NULL/DB_CASCADE
 4. When you use DB_CASCADE, the migration framework will recognize a change, and write new sql
 6. example SQL generated:
     ```
@@ -44,7 +46,7 @@ class Thing(Common):
     ```
 
 ### Future proof
-If, and when, DB_CASCADE ever gets into django, editing these generated migrations should be very easy.
+If, and when, DB_SET_NULL/DB_CASCADE ever gets into django, editing these generated migrations should be very easy.
 
 Generated migrations:
 ```
