@@ -3,6 +3,7 @@ from django.db.backends.postgresql.schema import DatabaseSchemaEditor as DSE
 class DatabaseSchemaEditor(DSE):
 
     sql_on_delete_cascade = " ON DELETE CASCADE "
+    sql_on_delete_set_null = " ON DELETE SET NULL "
 
     sql_create_fk = (
         "ALTER TABLE %(table)s ADD CONSTRAINT %(name)s FOREIGN KEY (%(column)s) "
@@ -10,9 +11,13 @@ class DatabaseSchemaEditor(DSE):
     )
 
     def _create_on_delete_sql(self, model, field, suffix):
+
         on_delete_db_cascade = getattr(field, "on_delete_db_cascade", False)
+        on_delete_db_set_null = getattr(field, "on_delete_db_set_null", False)
         if on_delete_db_cascade:
             return self.sql_on_delete_cascade
+        elif on_delete_db_set_null:
+            return self.sql_on_delete_set_null
         else:
             return ""
 
@@ -35,3 +40,5 @@ class DatabaseSchemaEditor(DSE):
             "deferrable": self.connection.ops.deferrable_sql(),
             "on_delete": self._create_on_delete_sql(model, field, suffix)
         }
+
+
